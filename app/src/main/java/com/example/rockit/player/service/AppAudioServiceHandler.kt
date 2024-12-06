@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AppAudioServiceHandler @Inject constructor(
@@ -48,7 +49,7 @@ class AppAudioServiceHandler @Inject constructor(
         exoPlayer.prepare()
     }
 
-    suspend fun onPlayerEvents(
+    fun onPlayerEvents(
         playerEvent: PlayerEvent,
         selectedMediaIndex : Int = -1,
         seekPosition : Long = 0
@@ -99,7 +100,7 @@ class AppAudioServiceHandler @Inject constructor(
         }
     }
 
-    private suspend fun playOrPause() {
+    private fun playOrPause() {
         if(exoPlayer.isPlaying) {
             exoPlayer.pause()
             stopProgressUpdate()
@@ -112,28 +113,20 @@ class AppAudioServiceHandler @Inject constructor(
         }
     }
 
-//    private suspend fun startProgressUpdate() = job.run {
-//        while (true) {
-//            delay(500)
-//            _audioState.value = AudioState.Progress(
-//                progress = exoPlayer.currentPosition
-//            )
-//        }
-//    }
-
     private fun startProgressUpdate() {
         job = progressCoroutineScope.launch {
             while (true) {
-                delay(800)
                 _audioState.value = AudioState.Progress(
                     progress = exoPlayer.currentPosition
                 )
+                delay(800)
             }
         }
     }
 
     private fun stopProgressUpdate() {
         job?.cancel()
+        job = null
         _audioState.value = AudioState.Playing(
             isPlaying = false
         )
@@ -156,13 +149,16 @@ class AppAudioServiceHandler @Inject constructor(
         _audioState.value = AudioState.CurrentPlaying(
             mediaItemIndex = exoPlayer.currentMediaItemIndex
         )
-        if (isPlaying) {
-            progressCoroutineScope.launch {
-                startProgressUpdate()
-            }
-        } else {
-            stopProgressUpdate()
-        }
+
+//        if (!isPlaying) {
+//            stopProgressUpdate()
+//        }
+
+//        if (isPlaying) {
+//            startProgressUpdate()
+//        } else {
+//            stopProgressUpdate()
+//        }
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

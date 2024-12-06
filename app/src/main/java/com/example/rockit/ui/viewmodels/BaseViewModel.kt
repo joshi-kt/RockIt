@@ -158,6 +158,7 @@ open class BaseViewModel
     fun playSong(index: Int) {
         viewModelScope.launch {
             _visibleSongs.value?.let { setCurrentPlaylist(it) }
+        }.invokeOnCompletion {
             onUIEvents(UIEvents.SelectedAudioChange(index))
             _currentSongIndex.value = index
         }
@@ -176,7 +177,11 @@ open class BaseViewModel
         onUIEvents(UIEvents.SeekTo(float))
     }
 
-    private fun onUIEvents(uiEvents: UIEvents) = viewModelScope.launch {
+//    fun searchSongs() {
+//
+//    }
+
+    private fun onUIEvents(uiEvents: UIEvents) {
         when(uiEvents) {
             UIEvents.SeekToNext -> {
                 _currentSongIndex.value?.let { currentSongIndexValue ->
@@ -195,7 +200,9 @@ open class BaseViewModel
                     }
                 }
             }
-            UIEvents.PlayPause -> audioServiceHandler.onPlayerEvents(PlayerEvent.PlayPause)
+            UIEvents.PlayPause -> {
+                audioServiceHandler.onPlayerEvents(PlayerEvent.PlayPause)
+            }
             is UIEvents.SelectedAudioChange -> {
                 audioServiceHandler.onPlayerEvents(
                     PlayerEvent.SelectedAudioChange,
