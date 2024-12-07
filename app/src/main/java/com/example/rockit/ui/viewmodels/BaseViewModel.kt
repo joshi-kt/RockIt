@@ -78,6 +78,8 @@ open class BaseViewModel
     }
     val uiState = _uiState.asStateFlow()
 
+    private var searchJob : Job? = null
+
     init {
         audioServiceHandler.progressCoroutineScope = viewModelScope
         viewModelScope.launch {
@@ -130,6 +132,27 @@ open class BaseViewModel
         return emptyList()
     }
 
+    fun searchSongs(searchText : String) {
+        searchJob?.cancel()
+        searchJob = null
+        if (searchText.isBlank() && topSongs.isNotEmpty()) {
+            _visibleSongs.value = topSongs
+            changeFetchingStatus(false)
+            return
+        }
+        changeFetchingStatus(true)
+        searchJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val songs = dataRepository.getSearchedSongs(searchText)
+                _visibleSongs.value = songs.toMutableList()
+            } catch (e : Exception) {
+                e.printStackTrace()
+            } finally {
+                changeFetchingStatus(false)
+            }
+        }
+    }
+
     @WorkerThread
     private suspend fun setCurrentPlaylist(songs : List<Song>) {
         _currentPlayList.value = songs
@@ -176,10 +199,6 @@ open class BaseViewModel
         _currentProgress.value = float
         onUIEvents(UIEvents.SeekTo(float))
     }
-
-//    fun searchSongs() {
-//
-//    }
 
     private fun onUIEvents(uiEvents: UIEvents) {
         when(uiEvents) {

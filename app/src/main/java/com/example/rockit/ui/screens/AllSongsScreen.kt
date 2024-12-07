@@ -60,6 +60,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
@@ -133,7 +135,7 @@ fun AllSongsScreen(
             ),
             onValueChange = {
                 searchText = it
-//                viewModel.searchSongs(searchText)
+                viewModel.searchSongs(searchText)
             })
 
         if (isFetching) {
@@ -150,13 +152,30 @@ fun AllSongsScreen(
 
         } else {
 
-            visibleSongs?.let {
+            if (visibleSongs.isNullOrEmpty()) {
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "OPPS ! No song found",
+                        textAlign = TextAlign.Center,
+                        color = Color.White,
+                        fontSize = 25.sp
+                    )
+                }
+
+            } else {
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
                 ) {
-                    itemsIndexed(items = it,
+                    itemsIndexed(items = visibleSongs!!,
                         key = { index, item -> item.id },
                         itemContent = { index, item ->
                             SongItem(
@@ -166,6 +185,7 @@ fun AllSongsScreen(
                                 })
                         })
                 }
+
             }
 
         }
