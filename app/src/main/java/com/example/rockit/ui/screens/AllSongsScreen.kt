@@ -64,6 +64,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavOptions
+import androidx.navigation.NavOptionsBuilder
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -72,6 +75,7 @@ import com.example.rockit.Utils.Utils.convertTimestampToString
 import com.example.rockit.Utils.Utils.getArtistName
 import com.example.rockit.models.PlaybackState
 import com.example.rockit.models.Song
+import com.example.rockit.models.SongScreen
 import com.example.rockit.ui.theme.Black
 import com.example.rockit.ui.theme.Gray
 import com.example.rockit.ui.theme.Green
@@ -82,7 +86,8 @@ import kotlinx.coroutines.Job
 
 @Composable
 fun AllSongsScreen(
-    viewModel: BaseViewModel
+    viewModel: BaseViewModel,
+    navController: NavController
 ) {
 
     var searchText by rememberSaveable {
@@ -181,7 +186,9 @@ fun AllSongsScreen(
                             SongItem(
                                 song = item,
                                 onClick = {
-                                    viewModel.playSong(index)
+                                    viewModel.playSong(index, onStart = {
+                                        navController.navigate(route = SongScreen)
+                                    })
                                 })
                         })
                 }
@@ -316,7 +323,7 @@ fun BottomBar(
             }
 
             MusicControlButtons(
-                modifier = Modifier.padding(
+                modifier = Modifier.size(48.dp).padding(
                     end = 3.dp
                 ),
                 drawableRes = R.drawable.previous,

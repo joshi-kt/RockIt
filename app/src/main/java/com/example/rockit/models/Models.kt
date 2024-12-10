@@ -1,6 +1,6 @@
 package com.example.rockit.models
 
-import kotlin.time.Duration
+import kotlinx.serialization.Serializable
 
 data class Song (
     val id : String = "",
@@ -31,3 +31,9 @@ enum class PlaybackState {
     NEXT,
     PREVIOUS
 }
+
+@Serializable
+object AllSongsScreen
+
+@Serializable
+object SongScreen

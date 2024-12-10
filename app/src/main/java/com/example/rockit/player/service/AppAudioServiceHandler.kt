@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@MainThread
 class AppAudioServiceHandler @Inject constructor(
     private val exoPlayer: ExoPlayer,
 ) : Player.Listener
@@ -43,7 +44,6 @@ class AppAudioServiceHandler @Inject constructor(
         exoPlayer.prepare()
     }
 
-    @MainThread
     fun addMediaItemList(mediaItem: List<MediaItem>) {
         exoPlayer.setMediaItems(mediaItem)
         exoPlayer.prepare()
@@ -134,10 +134,10 @@ class AppAudioServiceHandler @Inject constructor(
 
     override fun onPlaybackStateChanged(playbackState: Int) {
         when(playbackState) {
-            ExoPlayer.STATE_BUFFERING -> _audioState.value = AudioState.Buffering(exoPlayer.currentPosition)
-            ExoPlayer.STATE_READY -> _audioState.value = AudioState.Ready(exoPlayer.duration)
+            Player.STATE_BUFFERING -> _audioState.value = AudioState.Buffering(exoPlayer.currentPosition)
+            Player.STATE_READY -> _audioState.value = AudioState.Ready(exoPlayer.duration)
             Player.STATE_ENDED -> {}
-            Player.STATE_IDLE -> {}
+            Player.STATE_IDLE -> _audioState.value = AudioState.Initial
         }
     }
 
@@ -149,16 +149,6 @@ class AppAudioServiceHandler @Inject constructor(
         _audioState.value = AudioState.CurrentPlaying(
             mediaItemIndex = exoPlayer.currentMediaItemIndex
         )
-
-//        if (!isPlaying) {
-//            stopProgressUpdate()
-//        }
-
-//        if (isPlaying) {
-//            startProgressUpdate()
-//        } else {
-//            stopProgressUpdate()
-//        }
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

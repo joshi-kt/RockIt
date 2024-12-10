@@ -46,36 +46,24 @@ open class BaseViewModel
     private val audioServiceHandler: AppAudioServiceHandler,
 ) : ViewModel() {
 
-    private val _isFetching by lazy {
-        MutableStateFlow(true)
-    }
+    private val _isFetching = MutableStateFlow(true)
     val isFetching = _isFetching.asStateFlow()
 
-    private val _currentProgress by lazy {
-        MutableStateFlow(0f)
-    }
+    private val _currentProgress = MutableStateFlow(0f)
     val currentProgress = _currentProgress.asStateFlow()
 
-    private val _currentSongIndex by lazy {
-        MutableStateFlow<Int?>(null)
-    }
+    private val _currentSongIndex = MutableStateFlow<Int?>(null)
     val currentSongIndex = _currentSongIndex.asStateFlow()
 
     private lateinit var topSongs : List<Song>
 
-    private val _currentPlayList by lazy {
-        MutableStateFlow<List<Song>?>(null)
-    }
+    private val _currentPlayList = MutableStateFlow<List<Song>?>(null)
     val currentPlayList = _currentPlayList.asStateFlow()
 
-    private val _visibleSongs by lazy {
-        MutableStateFlow<List<Song>?>(null)
-    }
+    private val _visibleSongs = MutableStateFlow<List<Song>?>(null)
     val visibleSongs = _visibleSongs.asStateFlow()
 
-    private val _uiState by lazy {
-        MutableStateFlow<UIState>(UIState.Initial)
-    }
+    private val _uiState = MutableStateFlow<UIState>(UIState.Initial)
     val uiState = _uiState.asStateFlow()
 
     private var searchJob : Job? = null
@@ -153,7 +141,6 @@ open class BaseViewModel
         }
     }
 
-    @WorkerThread
     private suspend fun setCurrentPlaylist(songs : List<Song>) {
         _currentPlayList.value = songs
         songs.map { audio ->
@@ -178,12 +165,13 @@ open class BaseViewModel
         onUIEvents(UIEvents.PlayPause)
     }
 
-    fun playSong(index: Int) {
+    fun playSong(index: Int, onStart : () -> Unit) {
         viewModelScope.launch {
             _visibleSongs.value?.let { setCurrentPlaylist(it) }
         }.invokeOnCompletion {
             onUIEvents(UIEvents.SelectedAudioChange(index))
             _currentSongIndex.value = index
+            onStart()
         }
     }
 
@@ -206,7 +194,7 @@ open class BaseViewModel
                 _currentSongIndex.value?.let { currentSongIndexValue ->
                     val currentPlayListSize = _currentPlayList.value?.size ?: 0
                     if (currentSongIndexValue != currentPlayListSize - 1) {
-                        audioServiceHandler.onPlayerEvents(PlayerEvent.SeekToPrevious)
+                        audioServiceHandler.onPlayerEvents(PlayerEvent.SeekToNext)
                         _currentSongIndex.value = currentSongIndexValue + 1
                     }
                 }
