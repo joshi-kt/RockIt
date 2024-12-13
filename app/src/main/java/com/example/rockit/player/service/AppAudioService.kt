@@ -1,8 +1,10 @@
 package com.example.rockit.player.service
 
 import android.content.Intent
+import android.os.IBinder
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import com.example.rockit.Utils.Utils.logger
 import com.example.rockit.player.notification.AppNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -27,8 +29,10 @@ class AppAudioService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession = mediaSession
 
     override fun onDestroy() {
+        logger("stopping audio service")
         super.onDestroy()
         mediaSession.apply {
+            player.release()
             release()
         }
     }

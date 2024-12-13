@@ -1,5 +1,6 @@
 package com.example.rockit.ui.viewmodels
 
+import android.content.Context
 import android.icu.lang.UCharacterDirection
 import android.net.Uri
 import android.util.Log
@@ -19,6 +20,7 @@ import com.example.rockit.Utils.Utils.logger
 import com.example.rockit.data.repository.DataRepository
 import com.example.rockit.models.Song
 import com.example.rockit.player.service.AppAudioServiceHandler
+import com.example.rockit.player.service.AudioServiceState
 import com.example.rockit.player.service.AudioState
 import com.example.rockit.player.service.PlayerEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -76,7 +78,7 @@ open class BaseViewModel
                 val songs = fetchTopSongs()
                 topSongs = songs.toImmutableList()
                 _visibleSongs.value = topSongs
-                setCurrentPlaylist(songs.toImmutableList())
+//                setCurrentPlaylist(songs.toImmutableList())
                 changeFetchingStatus(false)
             }
 
@@ -148,9 +150,9 @@ open class BaseViewModel
                 .setUri(audio.downloadUrl?.get(2)?.url)
                 .setMediaMetadata(
                     MediaMetadata.Builder()
-                        .setAlbumArtist(audio.artists?.primary?.let { getArtistName(it) })
+                        .setArtist(audio.artists?.primary?.let { getArtistName(it) })
                         .setDisplayTitle(audio.name)
-                        .setArtworkUri(Uri.parse(audio.image?.get(0)?.url))
+                        .setArtworkUri(Uri.parse(audio.image?.get(2)?.url))
                         .build()
                 )
                 .build()
@@ -165,7 +167,8 @@ open class BaseViewModel
         onUIEvents(UIEvents.PlayPause)
     }
 
-    fun playSong(index: Int, onStart : () -> Unit) {
+    fun playSong(index: Int, onStart : () -> Unit, context: Context) {
+        AudioServiceState.startAudioService(context)
         viewModelScope.launch {
             _visibleSongs.value?.let { setCurrentPlaylist(it) }
         }.invokeOnCompletion {

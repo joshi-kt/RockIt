@@ -9,6 +9,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.session.MediaSession
+import coil3.ImageLoader
 import com.example.rockit.player.notification.AppNotificationManager
 import com.example.rockit.player.service.AppAudioServiceHandler
 import com.example.rockit.ui.viewmodels.BaseViewModel

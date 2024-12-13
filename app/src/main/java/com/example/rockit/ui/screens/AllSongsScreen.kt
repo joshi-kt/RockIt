@@ -71,11 +71,13 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.rockit.R
+import com.example.rockit.Utils.Utils
 import com.example.rockit.Utils.Utils.convertTimestampToString
 import com.example.rockit.Utils.Utils.getArtistName
 import com.example.rockit.models.PlaybackState
 import com.example.rockit.models.Song
 import com.example.rockit.models.SongScreen
+import com.example.rockit.player.service.AudioServiceState
 import com.example.rockit.ui.theme.Black
 import com.example.rockit.ui.theme.Gray
 import com.example.rockit.ui.theme.Green
@@ -105,6 +107,8 @@ fun AllSongsScreen(
     val visibleSongs by viewModel.visibleSongs.collectAsState()
 
     val currentSongIndex by viewModel.currentSongIndex.collectAsState()
+
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -186,8 +190,8 @@ fun AllSongsScreen(
                             SongItem(
                                 song = item,
                                 onClick = {
-                                    viewModel.playSong(index, onStart = {
-                                        navController.navigate(route = SongScreen)
+                                    viewModel.playSong(index, context = context, onStart = {
+                                        navigate(navController)
                                     })
                                 })
                         })
@@ -208,20 +212,25 @@ fun AllSongsScreen(
                 viewModel.jumpToTimeStamp(position)
             },
             onMusicButtonPressed = {
-                when(it) {
-                    PlaybackState.RESUME -> {
-                        viewModel.playOrPauseSong()
-                    }
-                    PlaybackState.PAUSE -> {
-                        viewModel.playOrPauseSong()
-                    }
-                    PlaybackState.NEXT -> {
-                        viewModel.playNext()
-                    }
-                    PlaybackState.PREVIOUS -> {
-                        viewModel.playPrevious()
+                if (AudioServiceState.isAudioServiceRunning) {
+                    when(it) {
+                        PlaybackState.RESUME -> {
+                            viewModel.playOrPauseSong()
+                        }
+                        PlaybackState.PAUSE -> {
+                            viewModel.playOrPauseSong()
+                        }
+                        PlaybackState.NEXT -> {
+                            viewModel.playNext()
+                        }
+                        PlaybackState.PREVIOUS -> {
+                            viewModel.playPrevious()
+                        }
                     }
                 }
+            },
+            onclick = {
+                navigate(navController)
             }
         )
 
@@ -239,13 +248,16 @@ fun BottomBar(
     onMusicButtonPressed : (PlaybackState) -> Unit,
     currentPlayList : List<Song>?,
     selectedSongIndex : Int?,
+    onclick: () -> Unit
 ) {
 
     Column(
         modifier = Modifier
             .padding(
                 top = 2.dp,
-            ),
+            ).clickable{
+                onclick()
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
         ) {
@@ -467,4 +479,10 @@ fun SliderLayout(
 
     }
 
+}
+
+private fun navigate(navController: NavController) {
+    if (AudioServiceState.isAudioServiceRunning) {
+        navController.navigate(route = SongScreen)
+    }
 }

@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import kotlinx.serialization.json.JsonObject
 import org.json.JSONArray
 import org.json.JSONObject
 import retrofit2.Response
@@ -16,8 +17,9 @@ import java.lang.Exception
 class DataRepository(private val apiService: ApiService) {
 
     suspend fun getTopSongs(): List<Song> {
-        val result =  apiService.getTopSongPlayList().body()
-        val playListObject = result?.getAsJsonObject("data")
+        val result = apiService.getTopSongPlayList()
+        val body = result.body()
+        val playListObject = body?.getAsJsonObject("data")
         logger("top songs : $playListObject")
         val songs = mutableListOf<Song>()
         playListObject?.let {
@@ -28,8 +30,9 @@ class DataRepository(private val apiService: ApiService) {
     }
 
     suspend fun getSearchedSongs(searchText : String) : List<Song> {
-        val result =  apiService.searchSongs(searchText).body()
-        val resultDataObject = result?.getAsJsonObject("data")
+        val result = apiService.searchSongs(searchText)
+        val body =  result.body()
+        val resultDataObject = body?.getAsJsonObject("data")
         logger("searched songs : $resultDataObject")
         val songs = mutableListOf<Song>()
         resultDataObject?.let {

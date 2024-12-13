@@ -1,5 +1,9 @@
 package com.example.rockit.Utils
 
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Build
 import android.os.Debug
 import android.util.Log
 import androidx.core.text.HtmlCompat
@@ -7,6 +11,7 @@ import com.example.rockit.models.Artist
 import com.example.rockit.models.Artists
 import com.example.rockit.models.DownloadModel
 import com.example.rockit.models.Song
+import com.example.rockit.player.service.AppAudioService
 import java.util.Locale
 
 object Utils {

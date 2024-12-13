@@ -11,6 +11,7 @@ import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.target.Target
 import coil3.util.CoilUtils
+import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @UnstableApi
@@ -19,16 +20,11 @@ class AppNotificationAdapter(
     private val pendingIntent: PendingIntent?
 ) : PlayerNotificationManager.MediaDescriptionAdapter {
 
-    @Inject
-    lateinit var imageLoader: ImageLoader
-
     override fun getCurrentContentTitle(player: Player): CharSequence = player.mediaMetadata.displayTitle ?: "Unknown"
 
     override fun createCurrentContentIntent(player: Player): PendingIntent? = pendingIntent
 
     override fun getCurrentContentText(player: Player): CharSequence = player.mediaMetadata.artist ?: "Unknown"
-
-//    override fun getCurrentSubText(player: Player): CharSequence = player.mediaMetadata.artist ?: "Unknown"
 
     override fun getCurrentLargeIcon(
         player: Player,
@@ -41,7 +37,7 @@ class AppNotificationAdapter(
                 callback.onBitmap(bitmap)
             })
             .build()
-        imageLoader.enqueue(request)
+        ImageLoader(context).enqueue(request)
         return null
     }
 
