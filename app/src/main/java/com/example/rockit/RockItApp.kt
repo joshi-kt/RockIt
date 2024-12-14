@@ -8,6 +8,7 @@ import com.example.rockit.data.preferences.AppPreferences
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.coroutineScope
@@ -27,11 +28,8 @@ class RockItApp : Application() {
     override fun onCreate() {
         super.onCreate()
         AppPreferences.init(this)
-        if (BuildConfig.DEBUG) {
-            GlobalScope.launch(Dispatchers.IO) {
-                localData = loadDataFromTest(this@RockItApp)
-                logger("local data $localData")
-            }
+        CoroutineScope(Dispatchers.IO).launch {
+            localData = loadDataFromTest(this@RockItApp)
         }
     }
 

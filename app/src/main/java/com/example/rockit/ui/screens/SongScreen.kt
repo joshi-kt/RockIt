@@ -99,7 +99,11 @@ fun SongScreen(
         )
 
         Text(
-            text = currentSongIndex?.let { currentPlayList?.get(it)?.name} ?: "Unknown",
+            text = currentSongIndex?.let {
+                currentPlayList?.get(it)?.name?.let { songName ->
+                    parseText(songName)
+                }
+            } ?: "Unknown",
             fontFamily = FontFamily.SansSerif,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 28.sp,
