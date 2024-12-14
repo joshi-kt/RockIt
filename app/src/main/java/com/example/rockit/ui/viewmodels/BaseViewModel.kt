@@ -17,6 +17,7 @@ import androidx.media3.common.MediaMetadata
 import com.example.rockit.Utils.Utils
 import com.example.rockit.Utils.Utils.getArtistName
 import com.example.rockit.Utils.Utils.logger
+import com.example.rockit.data.preferences.AppPreferences
 import com.example.rockit.data.repository.DataRepository
 import com.example.rockit.models.Song
 import com.example.rockit.player.service.AppAudioServiceHandler
@@ -42,7 +43,7 @@ import javax.inject.Inject
 import kotlin.Exception
 
 @HiltViewModel
-open class BaseViewModel
+class BaseViewModel
 @Inject constructor (
     private val dataRepository: DataRepository,
     private val audioServiceHandler: AppAudioServiceHandler,
@@ -78,7 +79,6 @@ open class BaseViewModel
                 val songs = fetchTopSongs()
                 topSongs = songs.toImmutableList()
                 _visibleSongs.value = topSongs
-//                setCurrentPlaylist(songs.toImmutableList())
                 changeFetchingStatus(false)
             }
 
@@ -147,7 +147,7 @@ open class BaseViewModel
         _currentPlayList.value = songs
         songs.map { audio ->
             MediaItem.Builder()
-                .setUri(audio.downloadUrl?.get(2)?.url)
+                .setUri(audio.downloadUrl?.get(AppPreferences.audioQuality)?.url)
                 .setMediaMetadata(
                     MediaMetadata.Builder()
                         .setArtist(audio.artists?.primary?.let { getArtistName(it) })

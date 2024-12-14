@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.os.Build
 import com.example.rockit.Utils.Utils.logger
+import com.example.rockit.data.preferences.AppPreferences
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.HiltAndroidApp
@@ -25,6 +26,7 @@ class RockItApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppPreferences.init(this)
         if (BuildConfig.DEBUG) {
             GlobalScope.launch(Dispatchers.IO) {
                 localData = loadDataFromTest(this@RockItApp)

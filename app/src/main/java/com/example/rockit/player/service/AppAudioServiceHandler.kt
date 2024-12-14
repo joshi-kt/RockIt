@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.annotation.MainThread
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.rockit.Utils.Utils.logger

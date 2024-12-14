@@ -3,7 +3,11 @@ package com.example.rockit.ui.screens
 import android.media.AudioTimestamp
 import android.media.Image
 import android.media.MediaDescription
+import android.widget.ImageButton
+import android.widget.Toast
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -25,8 +29,13 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -61,6 +70,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,8 +82,15 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.rockit.R
 import com.example.rockit.Utils.Utils
+import com.example.rockit.Utils.Utils.KBPS_12
+import com.example.rockit.Utils.Utils.KBPS_160
+import com.example.rockit.Utils.Utils.KBPS_320
+import com.example.rockit.Utils.Utils.KBPS_48
+import com.example.rockit.Utils.Utils.KBPS_96
+import com.example.rockit.Utils.Utils.RESTART_APP
 import com.example.rockit.Utils.Utils.convertTimestampToString
 import com.example.rockit.Utils.Utils.getArtistName
+import com.example.rockit.data.preferences.AppPreferences
 import com.example.rockit.models.PlaybackState
 import com.example.rockit.models.Song
 import com.example.rockit.models.SongScreen
@@ -86,6 +103,7 @@ import com.example.rockit.ui.viewmodels.BaseViewModel
 import com.example.rockit.ui.viewmodels.UIState
 import kotlinx.coroutines.Job
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AllSongsScreen(
     viewModel: BaseViewModel,
@@ -94,6 +112,10 @@ fun AllSongsScreen(
 
     var searchText by rememberSaveable {
         mutableStateOf("")
+    }
+
+    var isMenuVisible by rememberSaveable {
+        mutableStateOf(false)
     }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -117,35 +139,13 @@ fun AllSongsScreen(
             .padding(5.dp)
     ) {
 
-        TextField(
-            value = searchText,
-
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    all = 5.dp
-                ),
-            placeholder = {
-                Text(
-                    text = "Search here ...",
-                    fontFamily = FontFamily.SansSerif,
-                    fontSize = 16.sp,
-                    color = Black,
-                )
-            },
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = White,
-                unfocusedContainerColor = White,
-                focusedIndicatorColor = Green
-            ),
-            textStyle = TextStyle(
-                color = Black,
-                fontSize = 18.sp,
-            ),
-            onValueChange = {
+        TopBar(
+            searchText = searchText,
+            onSearchValueChanged = {
                 searchText = it
                 viewModel.searchSongs(searchText)
-            })
+            }
+        )
 
         if (isFetching) {
 
@@ -255,7 +255,8 @@ fun BottomBar(
         modifier = Modifier
             .padding(
                 top = 2.dp,
-            ).clickable{
+            )
+            .clickable {
                 onclick()
             },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -335,9 +336,11 @@ fun BottomBar(
             }
 
             MusicControlButtons(
-                modifier = Modifier.size(48.dp).padding(
-                    end = 3.dp
-                ),
+                modifier = Modifier
+                    .padding(
+                        start = 3.dp,
+                        end = 3.dp
+                    ),
                 drawableRes = R.drawable.previous,
                 contentDescription = "previous button",
                 onclick = {
@@ -479,6 +482,216 @@ fun SliderLayout(
 
     }
 
+}
+
+@Composable
+fun TopBar(
+    searchText : String,
+    onSearchValueChanged : (String) -> Unit,
+) {
+
+    var isMenuVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val context = LocalContext.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        TextField(
+            value = searchText,
+
+            modifier = Modifier
+                .weight(1f)
+                .padding(
+                    all = 5.dp
+                ),
+            placeholder = {
+                Text(
+                    text = "Search here ...",
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 16.sp,
+                    color = Black,
+                )
+            },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = White,
+                unfocusedContainerColor = White,
+                focusedIndicatorColor = Green
+            ),
+            textStyle = TextStyle(
+                color = Black,
+                fontSize = 18.sp,
+            ),
+            onValueChange = {
+                onSearchValueChanged(it)
+            })
+
+        Column {
+
+            Image(
+                painter = painterResource(R.drawable.baseline_menu_24),
+                contentDescription = "menu icon",
+                colorFilter = ColorFilter.tint(Color.Green),
+                modifier = Modifier
+                    .size(48.dp)
+                    .clickable {
+                        isMenuVisible = !isMenuVisible
+                    }
+            )
+
+            if (isMenuVisible) {
+
+                CustomDropdownMenu(
+                    onDismissRequest = {
+                        isMenuVisible = false
+                    },
+                    onDropdownSelectionClicked = { selectedQuality ->
+                        AppPreferences.audioQuality = selectedQuality
+                        Toast.makeText(context, RESTART_APP, Toast.LENGTH_SHORT).show()
+                        isMenuVisible = false
+                    }
+                )
+
+            }
+        }
+
+    }
+
+}
+
+@Composable
+private fun CustomDropdownMenu(
+    onDismissRequest : () -> Unit,
+    onDropdownSelectionClicked: (Int) -> Unit
+) {
+
+    val currentSelectedQuality by rememberSaveable {
+        mutableIntStateOf(AppPreferences.audioQuality)
+    }
+
+    DropdownMenu(
+        expanded = true,
+        offset = DpOffset.VisibilityThreshold,
+        modifier = Modifier
+            .background(White),
+        onDismissRequest = {
+            onDismissRequest()
+        },
+    ) {
+
+        DropdownMenuItem(
+            text = {
+                Text(
+                    text = "Select Song Quality",
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+            },
+            onClick = {}
+        )
+
+        DropDownItem(
+            dropdownQuality = KBPS_12,
+            dropdownQualityText = "12 KBPS",
+            isChecked = KBPS_12 == currentSelectedQuality,
+            onDropdownSelectionClicked = {
+                onDropdownSelectionClicked(KBPS_12)
+            }
+        )
+
+        DropDownItem(
+            dropdownQuality = KBPS_48,
+            dropdownQualityText = "48 KBPS",
+            isChecked = KBPS_48 == currentSelectedQuality,
+            onDropdownSelectionClicked = {
+                onDropdownSelectionClicked(KBPS_48)
+            }
+        )
+
+        DropDownItem(
+            dropdownQuality = KBPS_96,
+            dropdownQualityText = "96 KBPS",
+            isChecked = KBPS_96 == currentSelectedQuality,
+            onDropdownSelectionClicked = {
+                onDropdownSelectionClicked(KBPS_96)
+            }
+        )
+
+        DropDownItem(
+            dropdownQuality = KBPS_160,
+            dropdownQualityText = "160 KBPS",
+            isChecked = KBPS_160 == currentSelectedQuality,
+            onDropdownSelectionClicked = {
+                onDropdownSelectionClicked(KBPS_160)
+            }
+        )
+
+        DropDownItem(
+            dropdownQuality = KBPS_320,
+            dropdownQualityText = "320 KBPS",
+            isChecked = KBPS_320 == currentSelectedQuality,
+            onDropdownSelectionClicked = {
+                onDropdownSelectionClicked(KBPS_320)
+            }
+        )
+
+
+    }
+}
+
+@Composable
+fun DropDownItem(
+    dropdownQuality : Int,
+    isChecked: Boolean,
+    onDropdownSelectionClicked : (Int) -> Unit,
+    dropdownQualityText: String
+) {
+
+    DropdownMenuItem(
+        text = { MenuText(dropdownQualityText) },
+        onClick = {
+            onDropdownSelectionClicked(dropdownQuality)
+        },
+        trailingIcon = {
+            MenuCheckbox(
+                isChecked = isChecked,
+                onDropdownSelectionClicked = {
+                    onDropdownSelectionClicked(dropdownQuality)
+                }
+            )
+        }
+    )
+}
+
+@Composable
+private fun MenuText(text : String) {
+    Text(
+        text = text
+    )
+}
+
+@Composable
+private fun MenuCheckbox(
+    isChecked : Boolean,
+    onDropdownSelectionClicked: () -> Unit
+) {
+
+    Checkbox(
+        isChecked,
+        colors = CheckboxDefaults.colors(
+            checkedColor = Green,
+            checkmarkColor = White,
+        ),
+        onCheckedChange = {
+            onDropdownSelectionClicked()
+        }
+    )
 }
 
 private fun navigate(navController: NavController) {

@@ -69,7 +69,7 @@ class AppNotificationManager @Inject constructor(
             Utils.NOTIFICATION_ID,
             Utils.NOTIFICATION_CHANNEL_ID
         )
-            .setSmallIconResourceId(R.mipmap.ic_launcher)
+            .setSmallIconResourceId(R.drawable.music_backup_image)
             .setMediaDescriptionAdapter(
                 AppNotificationAdapter(
                     context = context,

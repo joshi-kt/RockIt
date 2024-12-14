@@ -1,17 +1,8 @@
 package com.example.rockit.Utils
 
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.os.Build
-import android.os.Debug
 import android.util.Log
 import androidx.core.text.HtmlCompat
 import com.example.rockit.models.Artist
-import com.example.rockit.models.Artists
-import com.example.rockit.models.DownloadModel
-import com.example.rockit.models.Song
-import com.example.rockit.player.service.AppAudioService
 import java.util.Locale
 
 object Utils {
@@ -20,6 +11,14 @@ object Utils {
     const val NOTIFICATION_ID = 101
     const val NOTIFICATION_CHANNEL_NAME = "CHANNEL_NAME"
     const val NOTIFICATION_CHANNEL_ID = "CHANNEL_ID"
+    const val APP_PREFERENCE_NAME = "MUSIC_PREFERENCES"
+    const val AUDIO_QUALITY = "AUDIO QUALITY"
+    const val KBPS_12 = 0
+    const val KBPS_48 = 1
+    const val KBPS_96 = 2
+    const val KBPS_160 = 3
+    const val KBPS_320 = 4
+    const val RESTART_APP = "Restart the app to activate audio quality changes"
 
     fun logger(log : String) = Log.d("myapp",log)
 

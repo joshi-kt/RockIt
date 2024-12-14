@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -112,15 +113,39 @@ fun SongItem(
                     .basicMarquee(iterations = Int.MAX_VALUE)
             )
 
-            Text(
-                text = song.artists?.primary?.let { Utils.getArtistName(it) } ?: "",
-                fontFamily = FontFamily.SansSerif,
-                fontSize = 16.sp,
-                color = Black,
+            Row(
                 modifier = Modifier
-                    .padding(top = 1.dp)
-                    .basicMarquee(iterations = Int.MAX_VALUE)
-            )
+                    .padding(
+                        top = 1.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                if (song.explicitContent) {
+
+                    Image(
+                        painter = painterResource(R.drawable.explicit),
+                        contentDescription = "Explicit content",
+                        colorFilter = ColorFilter.tint(color = Black),
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(
+                                end = 1.dp
+                            )
+                    )
+
+                }
+
+                Text(
+                    text = song.artists?.primary?.let { Utils.getArtistName(it) } ?: "",
+                    fontFamily = FontFamily.SansSerif,
+                    fontSize = 16.sp,
+                    color = Black,
+                    modifier = Modifier
+                        .basicMarquee(iterations = Int.MAX_VALUE)
+                )
+
+            }
 
         }
     }
