@@ -36,8 +36,7 @@ class RockItApp : Application() {
     @Inject lateinit var exoplayer : ExoPlayer
 
     @Inject lateinit var dataRepository: DataRepository
-
-    @OptIn(UnstableApi::class)
+    
     override fun onCreate() {
         super.onCreate()
         AppPreferences.init(this)
