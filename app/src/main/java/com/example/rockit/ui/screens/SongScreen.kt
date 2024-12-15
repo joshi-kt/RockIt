@@ -1,10 +1,20 @@
 package com.example.rockit.ui.screens
 
+import android.content.res.Configuration
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,21 +28,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -66,6 +87,57 @@ fun SongScreen(
 
     val currentSongIndex by viewModel.currentSongIndex.collectAsState()
 
+    val configuration = LocalConfiguration.current
+
+    var imageSize by rememberSaveable {
+        mutableIntStateOf(250)
+    }
+
+    var buttonSize by rememberSaveable {
+        mutableIntStateOf(48)
+    }
+
+    val orientation by remember {
+        mutableIntStateOf(configuration.orientation)
+    }
+
+    var currentRotation by remember { mutableFloatStateOf(0f) }
+
+    val rotation = remember { Animatable(currentRotation) }
+
+    LaunchedEffect(uiState) {
+        if (uiState == UIState.Playing) {
+            rotation.animateTo(
+                targetValue = currentRotation + 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(40000, easing = LinearEasing)
+                )
+            ) {
+                currentRotation = value
+            }
+        } else {
+            rotation.animateTo(
+                targetValue = currentRotation + 8f,
+                animationSpec = tween(
+                    durationMillis = 3000,
+                    easing = LinearOutSlowInEasing
+                )
+            ) {
+                currentRotation = value
+            }
+        }
+    }
+
+    LaunchedEffect(orientation) {
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            imageSize = 125
+            buttonSize = 24
+        } else {
+            imageSize = 250
+            buttonSize = 48
+        }
+    }
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -89,12 +161,13 @@ fun SongScreen(
                 .padding(
                     bottom = 10.dp
                 )
-                .size(250.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .rotate(rotation.value)
+                .size(imageSize.dp)
+                .clip(CircleShape)
                 .border(
                     width = 2.dp,
                     color = Green,
-                    shape = RoundedCornerShape(10.dp)
+                    shape = CircleShape
                 )
         )
 
@@ -155,7 +228,8 @@ fun SongScreen(
                 contentDescription = "previous button",
                 onclick = {
                     viewModel.playPrevious()
-                }
+                },
+                buttonSize = buttonSize
             )
 
             if (uiState == UIState.Playing) {
@@ -172,7 +246,8 @@ fun SongScreen(
                     contentDescription = "pause button",
                     onclick = {
                         viewModel.playOrPauseSong()
-                    }
+                    },
+                    buttonSize = buttonSize
                 )
 
             } else if (uiState == UIState.Buffering) {
@@ -204,7 +279,8 @@ fun SongScreen(
                     contentDescription = "play button",
                     onclick = {
                         viewModel.playOrPauseSong()
-                    }
+                    },
+                    buttonSize = buttonSize
                 )
 
             }
@@ -217,7 +293,8 @@ fun SongScreen(
                 contentDescription = "next button",
                 onclick = {
                     viewModel.playNext()
-                }
+                },
+                buttonSize = buttonSize
             )
 
         }
@@ -233,6 +310,7 @@ fun MusicButtons(
     drawableRes : Int,
     contentDescription: String,
     onclick : () -> Unit,
+    buttonSize : Int
 ) {
     Image(
         painter = painterResource(drawableRes),
@@ -242,8 +320,8 @@ fun MusicButtons(
             .padding(
                 start = 3.dp
             )
-            .heightIn(min = 100.dp)
-            .size(48.dp)
+            .heightIn(min = if (buttonSize == 48) 100.dp else Dp.Unspecified)
+            .size(buttonSize.dp)
             .clip(
                 RoundedCornerShape(5.dp)
             )
