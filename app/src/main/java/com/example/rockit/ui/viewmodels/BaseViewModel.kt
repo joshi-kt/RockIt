@@ -18,6 +18,7 @@ import com.example.rockit.Utils.Utils
 import com.example.rockit.Utils.Utils.getArtistName
 import com.example.rockit.Utils.Utils.logger
 import com.example.rockit.data.preferences.AppPreferences
+import com.example.rockit.data.repository.ConnectivityRepository
 import com.example.rockit.data.repository.DataRepository
 import com.example.rockit.models.Song
 import com.example.rockit.player.service.AppAudioServiceHandler
@@ -47,6 +48,7 @@ class BaseViewModel
 @Inject constructor (
     private val dataRepository: DataRepository,
     private val audioServiceHandler: AppAudioServiceHandler,
+    private val connectivityRepository: ConnectivityRepository
 ) : ViewModel() {
 
     private val _isFetching = MutableStateFlow(true)
@@ -69,18 +71,17 @@ class BaseViewModel
     private val _uiState = MutableStateFlow<UIState>(UIState.Initial)
     val uiState = _uiState.asStateFlow()
 
+    private val _networkState = MutableStateFlow(connectivityRepository.isNetworkConnected())
+    val networkState = _networkState.asStateFlow()
+
     private var searchJob : Job? = null
 
     init {
         audioServiceHandler.progressCoroutineScope = viewModelScope
         viewModelScope.launch {
 
-            withContext(Dispatchers.IO) {
-                val songs = fetchTopSongs()
-                topSongs = songs.toImmutableList()
-                _visibleSongs.value = topSongs
-                changeFetchingStatus(false)
-            }
+            loadInitialSongs()
+            changeFetchingStatus(false)
 
             audioServiceHandler.audioState.collectLatest { mediaState ->
                 when(mediaState){
@@ -107,6 +108,17 @@ class BaseViewModel
                             _currentSongIndex.value = it + 1
                         }
                     }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            connectivityRepository.isConnected.collectLatest { isConnected ->
+                _networkState.value = isConnected
+                if (isConnected && (_visibleSongs.value.isNullOrEmpty() &&  !_isFetching.value)) {
+                    changeFetchingStatus(true)
+                    loadInitialSongs()
+                    changeFetchingStatus(false)
                 }
             }
         }
@@ -160,6 +172,14 @@ class BaseViewModel
             withContext(Dispatchers.Main) {
                 audioServiceHandler.addMediaItemList(it)
             }
+        }
+    }
+
+    private suspend fun loadInitialSongs() {
+        withContext(Dispatchers.IO) {
+            val songs = fetchTopSongs()
+            topSongs = songs.toImmutableList()
+            _visibleSongs.value = topSongs
         }
     }
 
@@ -247,6 +267,11 @@ class BaseViewModel
 
     private fun changeFetchingStatus(status : Boolean) {
         _isFetching.value = status
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        connectivityRepository.unregisterDefaultNetworkCallback()
     }
 
 }

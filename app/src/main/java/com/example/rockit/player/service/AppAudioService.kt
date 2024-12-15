@@ -29,9 +29,6 @@ class AppAudioService : MediaSessionService() {
     @Inject
     lateinit var notificationManager: AppNotificationManager
 
-    @Inject
-    lateinit var exoPlayer: ExoPlayer
-
     @OptIn(UnstableApi::class)
     override fun onTaskRemoved(rootIntent: Intent?) {
         logger("task removed")
@@ -43,12 +40,6 @@ class AppAudioService : MediaSessionService() {
             mediaSession = mediaSession,
             mediaSessionService = this
         )
-//        CoroutineScope(Dispatchers.IO).launch {
-//            while (true) {
-//                logger("i am running")
-//                delay(2000)
-//            }
-//        }
         return super.onStartCommand(intent, flags, startId)
     }
 

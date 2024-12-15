@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.rockit"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.coil)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.lottie.compose)
 }
 
 kapt {

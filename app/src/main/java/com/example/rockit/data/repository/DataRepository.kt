@@ -66,4 +66,20 @@ class DataRepository(private val apiService: ApiService) {
         }
     }
 
+    fun loadDataFromTest(context: Context): JsonObject? {
+        val json: String
+        try {
+            val inputStream = context.assets.open("data.json")
+            val size = inputStream.available()
+            val buffer = ByteArray(size)
+            inputStream.read(buffer)
+            inputStream.close()
+            json = String(buffer, Charset.forName("UTF-8"))
+            return Gson().fromJson(json, JsonObject::class.java)
+        } catch (ex: IOException) {
+            ex.printStackTrace()
+            return null
+        }
+    }
+
 }

@@ -11,6 +11,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.example.rockit.Utils.Utils.logger
 import com.example.rockit.data.preferences.AppPreferences
+import com.example.rockit.data.repository.DataRepository
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import dagger.hilt.android.HiltAndroidApp
@@ -34,43 +35,16 @@ class RockItApp : Application() {
 
     @Inject lateinit var exoplayer : ExoPlayer
 
+    @Inject private lateinit var dataRepository: DataRepository
+
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         AppPreferences.init(this)
         CoroutineScope(Dispatchers.IO).launch {
-            localData = loadDataFromTest(this@RockItApp)
-        }
-        if (exoplayer.isReleased) {
-
-            val audioAttributes = AudioAttributes
-                .Builder()
-                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
-                .setUsage(C.USAGE_MEDIA)
-                .build()
-
-            exoplayer = ExoPlayer
-                .Builder(this)
-                .setAudioAttributes(audioAttributes, true)
-                .setHandleAudioBecomingNoisy(true)
-                .setTrackSelector(DefaultTrackSelector(this))
-                .build()
+            localData = dataRepository.loadDataFromTest(this@RockItApp)
         }
     }
 
-    private fun loadDataFromTest(context: Context): JsonObject? {
-        val json: String
-        try {
-            val inputStream = context.assets.open("data.json")
-            val size = inputStream.available()
-            val buffer = ByteArray(size)
-            inputStream.read(buffer)
-            inputStream.close()
-            json = String(buffer, Charset.forName("UTF-8"))
-            return Gson().fromJson(json, JsonObject::class.java)
-        } catch (ex: IOException) {
-            ex.printStackTrace()
-            return null
-        }
-    }
+
 }
