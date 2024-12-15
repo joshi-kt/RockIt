@@ -84,8 +84,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        AudioServiceState.stopAudioService(this)
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        AudioServiceState.stopAudioService(this)
+//    }
 }

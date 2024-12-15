@@ -3,6 +3,12 @@ package com.example.rockit
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import androidx.annotation.OptIn
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.example.rockit.Utils.Utils.logger
 import com.example.rockit.data.preferences.AppPreferences
 import com.google.gson.Gson
@@ -17,6 +23,7 @@ import kotlinx.serialization.json.buildJsonObject
 import org.json.JSONObject
 import java.io.IOException
 import java.nio.charset.Charset
+import javax.inject.Inject
 
 @HiltAndroidApp
 class RockItApp : Application() {
@@ -25,11 +32,29 @@ class RockItApp : Application() {
         var localData : JsonObject? = null
     }
 
+    @Inject lateinit var exoplayer : ExoPlayer
+
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         AppPreferences.init(this)
         CoroutineScope(Dispatchers.IO).launch {
             localData = loadDataFromTest(this@RockItApp)
+        }
+        if (exoplayer.isReleased) {
+
+            val audioAttributes = AudioAttributes
+                .Builder()
+                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_MEDIA)
+                .build()
+
+            exoplayer = ExoPlayer
+                .Builder(this)
+                .setAudioAttributes(audioAttributes, true)
+                .setHandleAudioBecomingNoisy(true)
+                .setTrackSelector(DefaultTrackSelector(this))
+                .build()
         }
     }
 

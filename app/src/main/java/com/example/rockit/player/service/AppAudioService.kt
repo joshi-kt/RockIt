@@ -1,12 +1,23 @@
 package com.example.rockit.player.service
 
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
+import android.os.Process
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.example.rockit.Utils.Utils.logger
 import com.example.rockit.player.notification.AppNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -18,11 +29,26 @@ class AppAudioService : MediaSessionService() {
     @Inject
     lateinit var notificationManager: AppNotificationManager
 
+    @Inject
+    lateinit var exoPlayer: ExoPlayer
+
+    @OptIn(UnstableApi::class)
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        logger("task removed")
+        pauseAllPlayersAndStopSelf()
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         notificationManager.startNotificationService(
             mediaSession = mediaSession,
             mediaSessionService = this
         )
+//        CoroutineScope(Dispatchers.IO).launch {
+//            while (true) {
+//                logger("i am running")
+//                delay(2000)
+//            }
+//        }
         return super.onStartCommand(intent, flags, startId)
     }
 
@@ -35,5 +61,6 @@ class AppAudioService : MediaSessionService() {
             player.release()
             release()
         }
+       Process.killProcess(Process.myPid())
     }
 }

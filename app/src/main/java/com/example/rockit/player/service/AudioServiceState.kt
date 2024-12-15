@@ -2,8 +2,10 @@ package com.example.rockit.player.service
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import com.example.rockit.Utils.Utils.logger
+import kotlin.math.log
 
 object AudioServiceState {
 
@@ -22,11 +24,10 @@ object AudioServiceState {
         }
     }
 
-    fun stopAudioService(context: Context) {
-        logger("stopping service")
-        if (isAudioServiceRunning) {
-            context.stopService(Intent(context, AppAudioService::class.java))
-            isAudioServiceRunning = false
-        }
-    }
+//    fun stopAudioService(context: Context) {
+//        if (isAudioServiceRunning) {
+////            logger("stopping service task : ${context.stopService(Intent(context, AppAudioService::class.java))}")
+//            isAudioServiceRunning = false
+//        }
+//    }
 }
