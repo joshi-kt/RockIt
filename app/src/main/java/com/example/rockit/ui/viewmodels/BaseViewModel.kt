@@ -32,6 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -79,46 +80,48 @@ class BaseViewModel
     init {
         audioServiceHandler.progressCoroutineScope = viewModelScope
         viewModelScope.launch {
-
             loadInitialSongs()
-            changeFetchingStatus(false)
+            observeAudioState()
+        }
+        viewModelScope.launch {
+            observeNetworkState()
+        }
+    }
 
-            audioServiceHandler.audioState.collectLatest { mediaState ->
-                when(mediaState){
-                    AudioState.Initial -> _uiState.value = UIState.Initial
-                    is AudioState.Buffering -> {
-                        setProgressValue(mediaState.progress)
-                        _uiState.value = UIState.Buffering
-                    }
-                    is AudioState.Playing -> {
-                        changeUIState( if(mediaState.isPlaying) UIState.Playing else UIState.Paused )
-                    }
-                    is AudioState.Progress -> {
-                        setProgressValue(mediaState.progress)
-                    }
-                    is AudioState.Ready -> {
-                        _uiState.value = UIState.Ready
-                        if (_currentSongIndex.value == null) _currentSongIndex.value = 0
-                    }
-                    is AudioState.CurrentPlaying -> {
-                        _currentSongIndex.value = mediaState.mediaItemIndex
-                    }
-                    AudioState.PlayingNext -> {
-                        _currentSongIndex.value?.let {
-                            _currentSongIndex.value = it + 1
-                        }
-                    }
-                }
+    private suspend fun observeNetworkState() {
+        connectivityRepository.observeConnectivity().collect { isConnected ->
+            _networkState.value = isConnected
+            if (isConnected && (_visibleSongs.value.isNullOrEmpty() &&  !_isFetching.value)) {
+                loadInitialSongs()
             }
         }
+    }
 
-        viewModelScope.launch {
-            connectivityRepository.isConnected.collectLatest { isConnected ->
-                _networkState.value = isConnected
-                if (isConnected && (_visibleSongs.value.isNullOrEmpty() &&  !_isFetching.value)) {
-                    changeFetchingStatus(true)
-                    loadInitialSongs()
-                    changeFetchingStatus(false)
+    private suspend fun observeAudioState() {
+        audioServiceHandler.audioState.collectLatest { mediaState ->
+            when(mediaState){
+                AudioState.Initial -> _uiState.value = UIState.Initial
+                is AudioState.Buffering -> {
+                    setProgressValue(mediaState.progress)
+                    _uiState.value = UIState.Buffering
+                }
+                is AudioState.Playing -> {
+                    changeUIState( if(mediaState.isPlaying) UIState.Playing else UIState.Paused )
+                }
+                is AudioState.Progress -> {
+                    setProgressValue(mediaState.progress)
+                }
+                is AudioState.Ready -> {
+                    _uiState.value = UIState.Ready
+                    if (_currentSongIndex.value == null) _currentSongIndex.value = 0
+                }
+                is AudioState.CurrentPlaying -> {
+                    _currentSongIndex.value = mediaState.mediaItemIndex
+                }
+                AudioState.PlayingNext -> {
+                    _currentSongIndex.value?.let {
+                        _currentSongIndex.value = it + 1
+                    }
                 }
             }
         }
@@ -176,11 +179,13 @@ class BaseViewModel
     }
 
     private suspend fun loadInitialSongs() {
+        changeFetchingStatus(true)
         withContext(Dispatchers.IO) {
             val songs = fetchTopSongs()
             topSongs = songs.toImmutableList()
             _visibleSongs.value = topSongs
         }
+        changeFetchingStatus(false)
     }
 
     fun playOrPauseSong() {
@@ -269,10 +274,10 @@ class BaseViewModel
         _isFetching.value = status
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        connectivityRepository.unregisterDefaultNetworkCallback()
-    }
+//    override fun onCleared() {
+//        super.onCleared()
+//        connectivityRepository.unregisterDefaultNetworkCallback()
+//    }
 
 }
 

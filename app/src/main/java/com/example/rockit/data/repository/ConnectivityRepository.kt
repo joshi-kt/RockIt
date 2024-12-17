@@ -6,32 +6,36 @@ import android.net.ConnectivityManager.NetworkCallback
 import com.example.rockit.Utils.Utils.logger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import android.net.Network
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 
 class ConnectivityRepository(context: Context) {
 
     private val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-    private val _isConnected = MutableStateFlow(isNetworkConnected())
-    val isConnected = _isConnected.asStateFlow()
+    fun observeConnectivity() = callbackFlow {
+        val callback = object : NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                trySend(true)
+            }
 
-    private val callback : NetworkCallback = object : NetworkCallback() {
-        override fun onAvailable(network: android.net.Network) {
-            _isConnected.value = true
+            override fun onLost(network: Network) {
+                trySend(false)
+            }
         }
-
-        override fun onLost(network: android.net.Network) {
-            _isConnected.value = false
-        }
-    }
-
-    init {
         connectivityManager.registerDefaultNetworkCallback(callback)
-    }
-
-    fun unregisterDefaultNetworkCallback() {
-        logger("unregistering")
-        connectivityManager.unregisterNetworkCallback(callback)
+        awaitClose {
+            logger("unregistering")
+            connectivityManager.unregisterNetworkCallback(callback)
+        }
     }
 
     fun isNetworkConnected() : Boolean {

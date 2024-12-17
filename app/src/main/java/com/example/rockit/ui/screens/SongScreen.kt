@@ -101,33 +101,6 @@ fun SongScreen(
         mutableIntStateOf(configuration.orientation)
     }
 
-    var currentRotation by remember { mutableFloatStateOf(0f) }
-
-    val rotation = remember { Animatable(currentRotation) }
-
-    LaunchedEffect(uiState) {
-        if (uiState == UIState.Playing) {
-            rotation.animateTo(
-                targetValue = currentRotation + 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(40000, easing = LinearEasing)
-                )
-            ) {
-                currentRotation = value
-            }
-        } else {
-            rotation.animateTo(
-                targetValue = currentRotation + 8f,
-                animationSpec = tween(
-                    durationMillis = 3000,
-                    easing = LinearOutSlowInEasing
-                )
-            ) {
-                currentRotation = value
-            }
-        }
-    }
-
     LaunchedEffect(orientation) {
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             imageSize = 125
@@ -147,28 +120,14 @@ fun SongScreen(
             .fillMaxSize()
     ) {
 
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).crossfade(true).data(currentSongIndex?.let {
+        CircularImage(
+            imageSize = imageSize,
+            imageData = currentSongIndex?.let {
                 currentPlayList?.get(
                     it
                 )?.image?.get(2)?.url
-            }
-                ?: R.drawable.music_backup_image).build(),
-            placeholder = painterResource(R.drawable.music_backup_image),
-            contentDescription = "music image",
-            contentScale = ContentScale.Fit,
-            modifier = Modifier
-                .padding(
-                    bottom = 10.dp
-                )
-                .rotate(rotation.value)
-                .size(imageSize.dp)
-                .clip(CircleShape)
-                .border(
-                    width = 2.dp,
-                    color = Green,
-                    shape = CircleShape
-                )
+            } ?: R.drawable.music_backup_image,
+            uiState = uiState
         )
 
         Text(
@@ -329,6 +288,50 @@ fun MusicButtons(
             .clickable {
                 onclick()
             }
+    )
+}
+
+@Composable
+fun CircularImage(
+    imageSize : Int,
+    imageData : Any,
+    uiState: UIState
+) {
+
+    var currentRotation by remember { mutableFloatStateOf(0f) }
+
+    val rotation = remember { Animatable(currentRotation) }
+
+    LaunchedEffect(uiState) {
+        if (uiState == UIState.Playing) {
+            rotation.animateTo(
+                targetValue = currentRotation + 360f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(40000, easing = LinearEasing)
+                )
+            ) {
+                currentRotation = value
+            }
+        }
+    }
+
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current).crossfade(true).data(imageData).build(),
+        placeholder = painterResource(R.drawable.music_backup_image),
+        contentDescription = "music image",
+        contentScale = ContentScale.Fit,
+        modifier = Modifier
+            .padding(
+                bottom = 10.dp
+            )
+            .rotate(rotation.value)
+            .size(imageSize.dp)
+            .clip(CircleShape)
+            .border(
+                width = 2.dp,
+                color = Green,
+                shape = CircleShape
+            )
     )
 }
 
