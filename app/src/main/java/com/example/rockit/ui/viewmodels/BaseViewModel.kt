@@ -28,11 +28,14 @@ import com.example.rockit.player.service.PlayerEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,11 +92,15 @@ class BaseViewModel
     }
 
     private suspend fun observeNetworkState() {
-        connectivityRepository.observeConnectivity().collect { isConnected ->
-            _networkState.value = isConnected
+        connectivityRepository.observeConnectivity().map { isConnected ->
             if (isConnected && (_visibleSongs.value.isNullOrEmpty() &&  !_isFetching.value)) {
-                loadInitialSongs()
+                coroutineScope {
+                    loadInitialSongs()
+                }
             }
+            return@map isConnected
+        }.collect { isConnected ->
+            _networkState.value = isConnected
         }
     }
 
@@ -273,11 +280,6 @@ class BaseViewModel
     private fun changeFetchingStatus(status : Boolean) {
         _isFetching.value = status
     }
-
-//    override fun onCleared() {
-//        super.onCleared()
-//        connectivityRepository.unregisterDefaultNetworkCallback()
-//    }
 
 }
 
