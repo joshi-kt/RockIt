@@ -2,6 +2,7 @@ package com.example.rockit.Utils
 
 import android.util.Log
 import androidx.core.text.HtmlCompat
+import com.example.rockit.BuildConfig
 import com.example.rockit.models.Artist
 import java.util.Locale
 
@@ -20,7 +21,11 @@ object Utils {
     const val KBPS_320 = 4
     const val RESTART_APP = "Restart the app to activate audio quality changes"
 
-    fun logger(log : String) = Log.d("myapp",log)
+    fun logger(log : String) {
+        if (BuildConfig.DEBUG) {
+            Log.d("myapp",log)
+        }
+    }
 
     fun parseText(rawText : String) = HtmlCompat.fromHtml(rawText, HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
 

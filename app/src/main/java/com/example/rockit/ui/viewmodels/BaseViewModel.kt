@@ -26,8 +26,10 @@ import com.example.rockit.player.service.AudioServiceState
 import com.example.rockit.player.service.AudioState
 import com.example.rockit.player.service.PlayerEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -146,7 +148,6 @@ class BaseViewModel
 
     fun searchSongs(searchText : String) {
         searchJob?.cancel()
-        searchJob = null
         if (searchText.isBlank() && topSongs.isNotEmpty()) {
             _visibleSongs.value = topSongs
             changeFetchingStatus(false)
@@ -157,10 +158,12 @@ class BaseViewModel
             try {
                 val songs = dataRepository.getSearchedSongs(searchText)
                 _visibleSongs.value = songs.toMutableList()
+                changeFetchingStatus(false)
             } catch (e : Exception) {
                 e.printStackTrace()
-            } finally {
-                changeFetchingStatus(false)
+                if (e !is CancellationException) {
+                    changeFetchingStatus(false)
+                }
             }
         }
     }
